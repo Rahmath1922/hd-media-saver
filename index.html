@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HD Media Saver - Auto Save</title>
+    
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-color: #ffffff;
+            --success-color: #2563eb;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #111827;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f9fafb;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #1d4ed8; }
+
+        .notification {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .notification.success { background-color: #dcfce7; color: #15803d; }
+        .hidden { display: none !important; }
+
+        .preview-box {
+            margin-top: 25px;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 15px;
+        }
+
+        .preview-box img, .preview-box video {
+            width: 100%;
+            max-height: 250px;
+            border-radius: 6px;
+            object-fit: contain;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>HD Media Saver</h2>
+        <p class="subtitle">Pilih file Gambar/Video HD untuk disimpan otomatis ke penyimpanan lokal laptop.</p>
+
+        <form id="media-form">
+            <div class="form-group">
+                <label for="media-file">Pilih Gambar / Video (Kualitas HD):</label>
+                <input type="file" id="media-file" accept="image/*,video/*" required>
+            </div>
+            
+            <button type="submit" id="btn-submit" class="btn-success">💾 Simpan Media</button>
+        </form>
+
+        <div id="notification" class="notification hidden"></div>
+
+        <div id="preview-container" class="preview-box hidden">
+            <h3>Preview Media:</h3>
+            <div id="preview-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const mediaFile = document.getElementById('media-file');
+        const mediaForm = document.getElementById('media-form');
+        const notification = document.getElementById('notification');
+        const previewContainer = document.getElementById('preview-container');
+        const previewContent = document.getElementById('preview-content');
+
+        // Preview Real-time saat file dipilih
+        mediaFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            previewContent.innerHTML = '';
+            const fileUrl = URL.createObjectURL(file);
+
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = fileUrl;
+                previewContent.appendChild(img);
+            } else if (file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = fileUrl;
+                video.controls = true;
+                previewContent.appendChild(video);
+            }
+            previewContainer.classList.remove('hidden');
+        });
+
+        // Proses download otomatis ke penyimpanan lokal (menjaga kualitas asli HD)
+        mediaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const file = mediaFile.files[0];
+            if (!file) return;
+
+            showNotification("Sedang memproses penyimpanan file HD...", "success");
+
+            // Membuat link download bayangan (hidden anchor link)
+            const fileUrl = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = file.name; // Menggunakan nama asli file
+            
+            document.body.appendChild(a);
+            a.click(); // Memicu download otomatis ke local drive
+            document.body.removeChild(a);
+
+            showNotification(`🎉 File "${file.name}" berhasil diproses ke folder penyimpanan!`, "success");
+            
+            // Reset Form setelah 1 detik
+            setTimeout(() => {
+                mediaForm.reset();
+                previewContainer.classList.add('hidden');
+                notification.classList.add('hidden');
+            }, 1500);
+        });
+
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
